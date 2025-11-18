@@ -31,6 +31,7 @@ namespace Santander.Hacker.News.Services.UnitTests
         }
 
         [Test]
+        //TM: Test the GetBestStoriesAsync method to ensure it returns top N stories sorted by score - the main functionality
         public async Task GetBestStoriesAsync_ReturnsTopN_SortedByScore()
         {
             // Arrange
@@ -55,33 +56,38 @@ namespace Santander.Hacker.News.Services.UnitTests
         }
 
         [Test]
-        public async Task GetBestStoriesAsync_FiltersNonStoryTypes_AndSkipsNullItems()
+        //TM: Test that GetBestStoriesAsync filters out non-story types and skips null items - sometimes it can be items that are not stories
+        public async Task GetBestStoriesAsync_FiltersNonStoryTypes_AndSkipsNullItems_UsingFakeData()
         {
-            // Arrange
-            var ids = new[] { 10, 11, 12 };
+            // Arrange - use fake ids but override some items to simulate non-story & null
+            var ids = FakeHackerNewsData.BestIds;
             _repoMock.Setup(r => r.GetBestStoryIdsAsync(It.IsAny<CancellationToken>()))
                      .ReturnsAsync(ids);
 
-            // id 10: valid story
-            _repoMock.Setup(r => r.GetItemAsync(10, It.IsAny<CancellationToken>()))
-                     .ReturnsAsync(new Story(10, "x", "S1", 5, "u10", 100, 1, "story", null));
-            // id 11: non-story type should be excluded
-            _repoMock.Setup(r => r.GetItemAsync(11, It.IsAny<CancellationToken>()))
-                     .ReturnsAsync(new Story(11, "y", "NotStory", 100, "u11", 200, 2, "job", null));
-            // id 12: upstream returned null -> skip
-            _repoMock.Setup(r => r.GetItemAsync(12, It.IsAny<CancellationToken>()))
+            // id=1 -> valid story
+            _repoMock.Setup(r => r.GetItemAsync(1, It.IsAny<CancellationToken>()))
+                     .ReturnsAsync(FakeHackerNewsData.GetStory(1));
+
+            // id=2 -> pretend upstream returned a non-story type
+            var nonStory = FakeHackerNewsData.GetStory(2) with { Type = "job" };
+            _repoMock.Setup(r => r.GetItemAsync(2, It.IsAny<CancellationToken>()))
+                     .ReturnsAsync(nonStory);
+
+            // id=3 -> upstream returned null
+            _repoMock.Setup(r => r.GetItemAsync(3, It.IsAny<CancellationToken>()))
                      .ReturnsAsync((Story?)null);
 
             // Act
             var result = await _service.GetBestStoriesAsync(10, CancellationToken.None);
 
-            // Assert
+            // Assert - only id=1 should remain
             Assert.IsNotNull(result);
             Assert.AreEqual(1, result.Length);
-            Assert.AreEqual(10, result[0].Id);
+            Assert.AreEqual(1, result[0].Id);
         }
 
         [Test]
+        //TM: Test that GetBestStoriesAsync throws ArgumentOutOfRangeException for invalid limits - 1-100 is the valid ones now - can be variable in the future
         public void GetBestStoriesAsync_InvalidLimit_ThrowsArgumentOutOfRangeException()
         {
             Assert.ThrowsAsync<ArgumentOutOfRangeException>(async () => await _service.GetBestStoriesAsync(0));
@@ -89,6 +95,7 @@ namespace Santander.Hacker.News.Services.UnitTests
         }
 
         [Test]
+        //TM: Test that GetBestStoriesAsync handles empty or null ID list from repo - and it should still works
         public async Task GetBestStoriesAsync_EmptyIds_ReturnsEmptyArray()
         {
             // Arrange - repo returns null

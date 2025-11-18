@@ -14,6 +14,8 @@ namespace Santander.Hacker.News.Repositories.UnitTests
         public async Task GetBestStoryIdsAsync_Returns_FixtureIds()
         {
             // arrange
+            //TM: The IHttpClientFactory is really good to be able to mock the HttpClient used in the repository
+            // but usually we need to fake two parts: the HttpClient itself and the HttpMessageHandler that is used by the HttpClient to send the requests
             var handler = new TestHttpMessageHandler();
             var client = new HttpClient(handler) { BaseAddress = new System.Uri(BaseAddress) };
             var factory = new SimpleHttpClientFactory(client);
