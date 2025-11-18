@@ -36,7 +36,7 @@ We have:
 
 ### Day 2:
 
-- Today, 18/11/2025, I started at around 09:30 (now is 12:13, lunch break from my work - I took this spare time to write it down) 
+- Today, 18/11/2025, I took the time for the lunch break 12:13 to edit part of this solution and spend sometime in the morning. 
 - Basically started adding unit testing, separated the tests I would need for this application. 
 - This can be tested also in automated testing - for stress testing, load testing, etc... 
 - It can be also done with integration testing for how the components work together. 
