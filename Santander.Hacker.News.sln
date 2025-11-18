@@ -17,6 +17,16 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Unit.Tests", "Unit.Tests", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Santander.Hacker.News.Web.UnitTests", "Santander.Hacker.News.Web.UnitTests\Santander.Hacker.News.Web.UnitTests.csproj", "{5CBD8A17-5948-4C92-BBF7-035B8548BA97}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Santander.Hacker.News.Services.UnitTests", "Santander.Hacker.News.Services.UnitTests\Santander.Hacker.News.Services.UnitTests.csproj", "{658685A7-BFD2-44D5-8B6A-9DDD983CA3C5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Santander.Hacker.News.Repositories.UnitTests", "Santander.Hacker.News.Repositories.UnitTests\Santander.Hacker.News.Repositories.UnitTests.csproj", "{698C59FB-E2FC-492B-A4A8-8E88F39F2649}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Santander.Hacker.News.TestFixtures", "Santander.Hacker.News.TestFixtures\Santander.Hacker.News.TestFixtures.csproj", "{40F6484F-4418-4BE0-A474-EEA84A81B002}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Automated.Tests", "Automated.Tests", "{75CCE670-E220-42EC-B016-3D058B1D08B0}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Integration.Tests", "Integration.Tests", "{85EFCA01-E6C7-4431-9F05-1CB253DF2B18}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -43,6 +53,18 @@ Global
 		{5CBD8A17-5948-4C92-BBF7-035B8548BA97}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5CBD8A17-5948-4C92-BBF7-035B8548BA97}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5CBD8A17-5948-4C92-BBF7-035B8548BA97}.Release|Any CPU.Build.0 = Release|Any CPU
+		{658685A7-BFD2-44D5-8B6A-9DDD983CA3C5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{658685A7-BFD2-44D5-8B6A-9DDD983CA3C5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{658685A7-BFD2-44D5-8B6A-9DDD983CA3C5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{658685A7-BFD2-44D5-8B6A-9DDD983CA3C5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{698C59FB-E2FC-492B-A4A8-8E88F39F2649}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{698C59FB-E2FC-492B-A4A8-8E88F39F2649}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{698C59FB-E2FC-492B-A4A8-8E88F39F2649}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{698C59FB-E2FC-492B-A4A8-8E88F39F2649}.Release|Any CPU.Build.0 = Release|Any CPU
+		{40F6484F-4418-4BE0-A474-EEA84A81B002}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{40F6484F-4418-4BE0-A474-EEA84A81B002}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{40F6484F-4418-4BE0-A474-EEA84A81B002}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{40F6484F-4418-4BE0-A474-EEA84A81B002}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -50,6 +72,11 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{974CD976-DB57-4E32-BF38-1208F9847BE9} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{5CBD8A17-5948-4C92-BBF7-035B8548BA97} = {974CD976-DB57-4E32-BF38-1208F9847BE9}
+		{658685A7-BFD2-44D5-8B6A-9DDD983CA3C5} = {974CD976-DB57-4E32-BF38-1208F9847BE9}
+		{698C59FB-E2FC-492B-A4A8-8E88F39F2649} = {974CD976-DB57-4E32-BF38-1208F9847BE9}
+		{40F6484F-4418-4BE0-A474-EEA84A81B002} = {974CD976-DB57-4E32-BF38-1208F9847BE9}
+		{75CCE670-E220-42EC-B016-3D058B1D08B0} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{85EFCA01-E6C7-4431-9F05-1CB253DF2B18} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {475412EA-E4D3-47C8-9816-C398B168FFA5}

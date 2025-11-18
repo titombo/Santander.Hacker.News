@@ -15,12 +15,14 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddAutoMapper(cfg => MappingProfiles.Map(cfg));
 
 // Rate limiting - per-client IP token-bucket limiter (tunable)
+// TM: This is the configuration of rate limiting that is using a built-in middleware in .NET
 builder.Services.AddRateLimiter(options =>
 {
     // Named policy applied to endpoints
     options.AddPolicy("DefaultPolicy", context =>
         RateLimitPartition.GetTokenBucketLimiter(
             // partition by client IP (fallback to "anon")
+            //TM: it is using the remote IP address of the client to identify it - so we have the congiruation per client IP
             context.Connection.RemoteIpAddress?.ToString() ?? "anon",
             key => new TokenBucketRateLimiterOptions
             {
@@ -32,6 +34,7 @@ builder.Services.AddRateLimiter(options =>
             }));
 
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
 
     options.OnRejected = async (context, token) =>
     {
@@ -71,10 +74,10 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-// Enable the rate limiter middleware
+//TM: Enable the rate limiter middleware
 app.UseRateLimiter();
 
-// TODO: Consider API versioning package for more complex scenarios
+// TODO: TM Consider API versioning package for more complex scenarios
 // Simple, fixed API version in the route to keep things straightforward:
 // GET /api/v1/stories/best?limit=10
 app.MapGet("/api/v1/stories/best", async (IStoryService storyService, IMapper mapper, HttpContext httpContext, int limit = 10, CancellationToken cancellationToken = default) =>
