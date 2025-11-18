@@ -20,7 +20,7 @@ For this part of requirements:
     You should share a public repository with us, that should include a README.md file which describes how to run the application, any assumptions you have made, and
     any enhancements or changes you would make, given the time.
 
-I am going to explain partially what I tought in each day and also taking into consideration that there was no time limit presented.
+I am going to explain partially what I tought in each day and what was coming to my mind throught this time:
 
 Day 1:
 I started coding it yesterday, 17/11/2025 after work, at 20:00 and finished at around 23:30.
@@ -44,139 +44,124 @@ We have:
     - locked collections - maybe we could use ConcurrentList or ConcurrentDictionary, but I have used simple lists with locks for simplicity.
 
 Day 2:
+
 Today, 18/11/2025, I started at around 09:30 (now is 12:13, lunch break from my work - I took this spare time to write it down) and basically started adding unit testing, separated the tests I would need for this application.
 This can be tested also in automated testing - for stress testing, load testing, etc... It can be also done with integration testing for how the components work together.
 But I focused on unit testing for the main components: Repository and Service layers.
 I have created a centralized fake implementations for testing Repository and Service layers so we can have some reusable parts.
-
+Changed part of README.md
 
 Overview
 --------
-This solution exposes a small REST API that returns the top N "best" Hacker News stories (as provided by the Hacker News API),
-sorted by score (descending). The web project uses a Repository → Service → Web-layer separation, AutoMapper for mapping
-domain models to view models, in-memory caching, and a simple per-client rate limiter.
+- .NET target: .NET 8
+- Minimal API (Program.cs)
+- Repository: calls Hacker News API endpoints and caches results
+- Service: orchestrates fetching, concurrency control and sorting
+- Web: maps domain models to view models and exposes the HTTP endpoint
+- TestFixtures: shared fake data used by unit tests
+- Unit tests: Repository and Service layers (no external network required)
 
-Project layout (relevant projects)
-- Santander.Hacker.News.Web       : Minimal API (Program.cs), Swagger, AutoMapper registration, endpoint(s).
-- Santander.Hacker.News.Services : Business logic (IStoryService / StoryService).
-- Santander.Hacker.News.Repositories : Hacker News HTTP access (IHackerNewsRepository / HackerNewsRepository).
-- Santander.Hacker.News.Domains  : Domain models (Story).
-- Santander.Hacker.News.Web.UnitTests : Integration/unit tests (WebApplicationFactory + fake services).
-- Santander.Hacker.News.Web.ViewModels : API view models (StoryViewModel).
-- Santander.Hacker.News.Web.AutoMappers : AutoMapper registration classes.
+Project layout
+--------------
+- Santander.Hacker.News.Web         — Minimal API and endpoint(s)
+- Santander.Hacker.News.Services    — Business logic (IStoryService / StoryService)
+- Santander.Hacker.News.Repositories — HTTP access (IHackerNewsRepository / HackerNewsRepository)
+- Santander.Hacker.News.Domains     — Domain models (Story)
+- Santander.Hacker.News.TestFixtures — Reusable fake data for tests
+- Santander.Hacker.News.*.UnitTests — Unit tests (Service + Repository + Web)
 
-Requirements
+Key features
 ------------
-- .NET 8 SDK
-- Visual Studio 2022 or VSCode (optional)
-- Internet access to query the Hacker News API (unless tests use fakes)
-
-NuGet packages you should have (common)
-- Swashbuckle.AspNetCore
-- AutoMapper
-- AutoMapper.Extensions.Microsoft.DependencyInjection
-- Microsoft.Extensions.Caching.Memory
-- Microsoft.AspNetCore.Mvc.Testing (for tests)
-- Microsoft.AspNetCore.TestHost (for tests)
-- NUnit, NUnit3TestAdapter, Microsoft.NET.Test.Sdk (for tests)
-- Polly (optional for resilience)
-If you see any LuckyPennySoftware.AutoMapper package, remove it and replace with the official AutoMapper packages.
+- GET /api/v1/stories/best?limit={n}
+  - limit: optional integer, defaults to 10, allowed range 1..100
+  - Returns JSON array of StoryViewModel items (title, uri, postedBy, time (ISO 8601), score, commentCount)
+  - Response includes header `X-Api-Version: 1.0`
+- Caching: IMemoryCache for best-ids and individual items
+- Concurrency: SemaphoreSlim in StoryService to bound parallel calls
+- Rate limiting: built-in .NET RateLimiter applied per-client IP (configurable)
+- Mapping: AutoMapper profiles live in Web.AutoMappers and are registered centrally
+- Tests: use FakeHackerNewsData to avoid network calls
 
 Configuration
 -------------
-Configuration values live in appsettings.json (and can be overridden via environment variables).
+appsettings.json (or environment variables) controls the Hacker News base URL:
 
-Key setting:
   "HackerNews": {
     "BaseUrl": "https://hacker-news.firebaseio.com/v0/"
   }
 
-You can override the base URL with environment variables:
-  set HackerNews__BaseUrl="https://..."        (Windows PowerShell/DevShell)
-  export HackerNews__BaseUrl="https://..."     (Linux/macOS)
+Environment variable override (example):
+- Windows PowerShell:
+  $env:HackerNews__BaseUrl = "https://..."
+- Linux / macOS:
+  export HackerNews__BaseUrl="https://..."
 
-How it works (high level)
--------------------------
-- Repository calls Hacker News endpoints:
-  - GET /v0/beststories.json -> list of story IDs
-  - GET /v0/item/{id}.json -> story details
-- Service fetches a capped number of IDs, fetches details with bounded concurrency, filters to "story" items,
-  sorts by score (then by time), and returns the top N requested.
-- Repository uses IMemoryCache to cache IDs and items briefly to reduce upstream calls.
-- AutoMapper maps domain Story -> StoryViewModel for the API response.
-- API endpoint exposes: GET /api/v1/stories/best?limit={n}
+Important implementation details
+--------------------------------
+- HttpClient: the project registers a named client "hackernews" and the repository uses IHttpClientFactory.CreateClient("hackernews"). Keep registration and usage consistent (named client) — do not mix typed and named registrations for the same service unless you change the repository accordingly.
+- Mapping: AutoMapper is used; alternatively Mapster is an efficient, license-free option if you want to avoid AutoMapper.
+- Rate limiting and concurrency:
+  - RateLimiter controls requests per time window (token bucket)
+  - SemaphoreSlim bounds concurrent outbound fetches
+  - Both are complementary: token bucket controls throughput, SemaphoreSlim controls in-flight concurrency
 
-Endpoint: GET /api/v1/stories/best
-----------------------------------
-Query parameter:
-- limit (int) — how many stories to return. Defaults to 10. Allowed range: 1..100.
-
-Response (JSON array) — each element is StoryViewModel:
-{
-  "title": "…",
-  "uri": "https://…",
-  "postedBy": "username",
-  "time": "2019-10-12T13:43:01+00:00",
-  "score": 1716,
-  "commentCount": 572
-}
-
-Example:
-  curl "http://localhost:5000/api/v1/stories/best?limit=5" -H "Accept: application/json"
-
-Rate limiting
--------------
-The app can be configured with a token-bucket rate limiter (per-client IP) in Program.cs.
-Default behaviour when rate-limited:
-- HTTP 429 Too Many Requests
-- Optional Retry-After header
-
-Adjust TokenLimit / TokensPerPeriod / ReplenishmentPeriod in Program.cs to suit your needs.
-
-Run locally
------------
-
-1. Restore packages and build:
+How to run (local)
+------------------
+1. Restore and build
    dotnet restore
    dotnet build
 
-2. Run the web project (from solution root):
+2. Run the Web project
    dotnet run --project Santander.Hacker.News.Web
 
-3. Open Swagger UI (if running in Development):
+3. Swagger UI (when running in Development)
    https://localhost:{port}/swagger
 
 Run tests
 ---------
-From solution root:
+From the solution root:
   dotnet test
 
-Notes & troubleshooting
------------------------
-- If you see "An invalid request URI..." or missing BaseAddress, ensure you register the HttpClient consistently:
-  - Either use a typed client:
-      builder.Services.AddHttpClient<IHackerNewsRepository, HackerNewsRepository>(c => c.BaseAddress = new Uri(...));
-    and let the repository accept HttpClient in its ctor, or
-  - Use a named client and call IHttpClientFactory.CreateClient("hackernews") in the repository.
-  Do not mix both approaches for the same service.
-- If you see a TypeLoadException for Microsoft.OpenApi.*: check Swashbuckle and Microsoft.OpenApi package versions.
-  Remove any explicit old Microsoft.OpenApi package; install a Swashbuckle version compatible with .NET 8.
-- If you see messages about LuckyPennySoftware.AutoMapper: remove that package and install the official AutoMapper packages:
+Packages (recommended)
+----------------------
+- Swashbuckle.AspNetCore (Swagger)
+- AutoMapper
+- AutoMapper.Extensions.Microsoft.DependencyInjection
+- Microsoft.Extensions.Caching.Memory
+- Microsoft.AspNetCore.Mvc.Testing (tests)
+- Microsoft.AspNetCore.TestHost (tests)
+- NUnit, NUnit3TestAdapter, Microsoft.NET.Test.Sdk (tests)
+- Polly (optional for HttpClient resilience)
+- If you find LuckyPennySoftware.AutoMapper in your graph, remove it and install the official AutoMapper packages:
   dotnet remove <project> package LuckyPennySoftware.AutoMapper
   dotnet add <project> package AutoMapper
   dotnet add <project> package AutoMapper.Extensions.Microsoft.DependencyInjection
 
+Testing notes
+-------------
+- Unit tests use FakeHackerNewsData from the TestFixtures project — tests run quickly and deterministically without network I/O.
+- Repository unit tests stub HttpClient by injecting a custom HttpMessageHandler that returns fixture JSON.
+- Web layer tests use WebApplicationFactory with a fake IStoryService to isolate endpoint behavior.
+
+Troubleshooting
+---------------
+- Invalid request URI / BaseAddress errors: ensure the registered HttpClient has BaseAddress set if the repository uses relative paths (or change the repository to use a typed HttpClient with BaseAddress).
+- OpenAPI / WithOpenApi TypeLoadException: ensure Swashbuckle and Microsoft.OpenApi versions are compatible; remove explicit Microsoft.OpenApi package if it causes conflicts and install Swashbuckle.AspNetCore instead.
+- Licensing: remove any third-party mapping packages that require production licenses (LuckyPennySoftware.AutoMapper) and replace with community/open alternatives.
+
 Extending the project
 ---------------------
-- Add more mappings: add a new Mapping class and register it in MappingProfiles.Map(cfg).
-- Move rate-limit / HTTP client policy settings to configuration.
-- Add Polly resiliency policies to HttpClient registration (retry, timeout, circuit-breaker).
-- Add per-version Swagger docs if you later enable API versioning.
+- Move static tuning values (MaxLimit, MaxIdsToFetch, MaxParallelism, rate-limiter settings) to configuration and bind with options pattern for environment-specific tuning and hot reload.
+- Add Polly policies (retry + jitter, timeout, circuit-breaker) to the HttpClient registration for better resilience against transient failures.
+- Add per-version Swagger docs if you adopt a more advanced versioning scheme later.
+- Add integration and load tests for end-to-end verification and performance testing.
 
-Contact / References
---------------------
+References
+----------
 - Hacker News API: https://github.com/HackerNews/API
 - AutoMapper: https://automapper.org/
 - .NET Rate Limiting: https://learn.microsoft.com/dotnet/standard/threading/rate-limiting
 
-----
+Contact / Notes
+---------------
+This README is intended to help reviewers run and understand the solution quickly. If you want changes (e.g., swap AutoMapper for Mapster, add Polly/Polly.Extensions.Http, or move settings to options), I can patch the code and tests accordingly.
