@@ -108,6 +108,12 @@ Important implementation details
 
 How to run (local)
 ------------------
+
+The easiest way to run is opening it with VS2022 is opening this solution and running the Santander.Hacker.News.Web as the startup project.
+Can be using Docker container or directly with IIS Express.
+
+Another alternative is using the command line:
+
 1. Restore and build
    dotnet restore
    dotnet build
