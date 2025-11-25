@@ -132,18 +132,22 @@ What I did (step-by-step)
   - Problem: Many tuning values are constants (MaxLimit, MaxIdsToFetch, MaxParallelism, rate-limiter settings).
   - Mitigation: Move to IOptions bound to appsettings and support environment overrides and hot-reload.
 
-Assumptions while developing this solution ⚠️
--------
+## Assumptions while developing this solution ⚠️
 
-•   The JSON will have the value types we expect (e.g., score is integer) and is not going to change.
-•	Some fields may be null/missing; service/repository tolerate nulls and provide safe defaults (score = 0, commentCount = 0).
-•	Only "story" items are considered; other types (job, poll, etc.) are filtered out.
-•	Limit parameter is clamped to 1..100; defaults to 10 if not provided.
-•   Rate limiting is per-client IP using built-in .NET RateLimiter middleware.
-•   The endpoint will be always available with the same url https://hacker-news.firebaseio.com will be always available.
-•   We don't need more endpoints - so Minimal API chosen.
-•   If the Hacker News API is down or unreachable, the API returns 502 Bad Gateway.
-•   If the score are the same value for an items, we sort by time descending.
+- **Stable JSON contract** — The Hacker News JSON schema is assumed stable (e.g., `score` is an integer). The code tolerates missing/null fields by using safe defaults (e.g., score = 0, commentCount = 0) but does not protect against breaking schema changes (type changes).
+- **Only "story" items considered** — Non-story item types (job, poll, comment, etc.) are filtered out by the service layer.
+- **Limit parameter behavior** — Query parameter `limit` defaults to 10 and is clamped to the inclusive range 1..100.
+- **Rate limiting scope** — Rate limiting is implemented per client IP using the built-in .NET RateLimiter middleware (in-process token-bucket).
+- **Hacker News base URL is configurable** — The upstream base URL is read from configuration (`HackerNews:BaseUrl`) but is assumed available in normal operation.
+- **Upstream failures → client response** — If Hacker News is unreachable or returns errors, the API surfaces a 502 Bad Gateway (or uses cached data when available).
+- **Sorting tie-breaker** — When scores are equal, items are ordered by `time` descending (most recent first).
+- **Caching expectations** — Caching uses `IMemoryCache` (local to the process). TTLs are short by design to balance freshness and upstream load; in multi-instance deployments this should be replaced or complemented with a distributed cache (Redis).
+- **Concurrency limits are process-local** — `SemaphoreSlim` bounds concurrent outbound fetches per process — not a global limit across multiple instances.
+- **No authentication / public endpoint** — The API is intentionally unauthenticated for the exercise; production usage would require API keys or other auth and per-key quotas.
+- **Tests are deterministic** — Unit tests use `FakeHackerNewsData` and stubbed `HttpClient` handlers so they run without external network calls.
+
+Notes
+- These assumptions aim to keep the example simple and focused on core behaviors (fetching, caching, concurrency, and presentation). Several are explicitly identified in the README as areas to improve for production readiness (observability, distributed caching, Polly policies, API keys).
 
 This solution solves the problem ✅
 -------
