@@ -308,7 +308,6 @@ Packages (recommended) 📦
 ## References 📚
 - Hacker News API: https://github.com/HackerNews/API
 - AutoMapper: https://automapper.org/
-- .NET Rate Limiting: https://learn.microsoft.com/dotnet/standard/threading/rate-limiting
 
 ## Contact / Notes 💬
 This README is intended to help reviewers run and understand the solution quickly. If you want changes (e.g., swap AutoMapper for Mapster, add Polly/Polly.Extensions.Http, or move settings to options), I can patch the code and tests accordingly.
